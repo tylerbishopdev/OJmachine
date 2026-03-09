@@ -5,10 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OJ Movie Maker</title>
   <style>
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('/fonts/Satoshi-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --gold: #d4a843;
+      --gold: #d47143;
       --gold-dim: rgba(212, 168, 67, 0.45);
       --gold-faint: rgba(212, 168, 67, 0.12);
       --crimson: #8b1a1a;
@@ -25,7 +33,7 @@
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Satoshi', sans-serif;
       min-height: 100vh;
       background: linear-gradient(165deg,
         #1a0a0a 0%,
@@ -63,20 +71,26 @@
       margin-bottom: 48px;
     }
 
+    .header-logo {
+      max-width: 200px;
+      height: auto;
+      margin-bottom: 16px;
+    }
+
     .header h1 {
-      font-size: 2.8rem;
+      font-size: 2.2rem;
       font-weight: 800;
       background: linear-gradient(135deg, var(--gold) 0%, #f0d080 50%, var(--gold) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      letter-spacing: -1px;
+      letter-spacing: -0.5px;
       text-shadow: 0 0 40px rgba(212, 168, 67, 0.3);
     }
 
     .header p {
       color: var(--text-dim);
-      margin-top: 8px;
-      font-size: 1.05rem;
+      margin-top: 4px;
+      font-size: 1rem;
     }
 
     /* Glass card */
@@ -130,9 +144,10 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+ 
       padding: 14px 28px;
       border: none;
-      border-radius: 12px;
+      border-radius: 999px;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
@@ -393,7 +408,8 @@
   <div class="app">
     <!-- Header -->
     <div class="header">
-      <h1>OJ Movie Maker</h1>
+      <img src="/ohjay.png" alt="OJ Movie Maker" class="header-logo" />
+      <h1>Generate Trailer</h1>
       <p>Put OJ Simpson in any movie. Generate a poster, storyboard, and trailer.</p>
     </div>
 
