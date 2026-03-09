@@ -1,18 +1,17 @@
 {
   "name": "oj-movie-maker",
   "version": "1.0.0",
-  "description": "OJ Simpson Movie Trailer Maker",
-  "main": "server.js",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "express": "^5.2.1",
-    "uuid": "^13.0.0"
+    "@fal-ai/client": "latest",
+    "@fal-ai/server-proxy": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
   }
 }

@@ -1,9 +1,5 @@
 node_modules/
-frames/
-posters/
-uploads/
-videos/
-.claude/
-*.png
-*.jpg
-*.mp4
+.next/
+.env.local
+.env*.local
+.vercel
