@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OJ Movie Maker</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #d4a843;
+      --gold-dim: rgba(212, 168, 67, 0.45);
+      --gold-faint: rgba(212, 168, 67, 0.12);
+      --crimson: #8b1a1a;
+      --crimson-light: #c23c3c;
+      --glass-bg: rgba(40, 20, 20, 0.35);
+      --glass-border: rgba(212, 168, 67, 0.25);
+      --glass-border-hover: rgba(212, 168, 67, 0.5);
+      --glass-blur: 24px;
+      --radius: 18px;
+      --text: #f0e6d0;
+      --text-dim: rgba(240, 230, 208, 0.5);
+      --error: #ff8f8f;
+      --success: #8fefb0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(165deg,
+        #1a0a0a 0%,
+        #2a1515 20%,
+        #1f1a10 40%,
+        #15120a 60%,
+        #0d0d0d 80%,
+        #050505 100%
+      );
+      background-attachment: fixed;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .header h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--gold) 0%, #f0d080 50%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+      text-shadow: 0 0 40px rgba(212, 168, 67, 0.3);
+    }
+
+    .header p {
+      color: var(--text-dim);
+      margin-top: 8px;
+      font-size: 1.05rem;
+    }
+
+    /* Glass card */
+    .card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .card h2 {
+      font-size: 1.3rem;
+      color: var(--gold);
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
+    /* Phase 1: Movie Idea Input */
+    .idea-input-wrap {
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .idea-input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1.1rem;
+      padding: 16px 20px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .idea-input:focus {
+      border-color: var(--gold);
+    }
+
+    .idea-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold) 0%, #c49530 100%);
+      color: #1a0a0a;
+    }
+
+    .btn-gold:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(212, 168, 67, 0.35);
+    }
+
+    .btn-crimson {
+      background: linear-gradient(135deg, var(--crimson-light) 0%, var(--crimson) 100%);
+      color: #f0e6d0;
+    }
+
+    .btn-crimson:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(139, 26, 26, 0.4);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--glass-border);
+      color: var(--text);
+    }
+
+    .btn-ghost:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: var(--glass-border-hover);
+    }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      border-radius: 8px;
+    }
+
+    /* Status bar */
+    .status-bar {
+      text-align: center;
+      padding: 12px;
+      color: var(--gold-dim);
+      font-size: 0.95rem;
+      min-height: 44px;
+    }
+
+    .status-bar.active {
+      color: var(--gold);
+    }
+
+    /* Poster display */
+    .poster-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .poster-img {
+      max-width: 400px;
+      width: 100%;
+      border-radius: 12px;
+      border: 2px solid var(--glass-border);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .poster-buttons {
+      display: flex;
+      gap: 16px;
+    }
+
+    /* Storyboard grid */
+    .storyboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .scene-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .scene-card img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      display: block;
+    }
+
+    .scene-card .scene-info {
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .scene-card .scene-label {
+      font-size: 0.85rem;
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    .scene-card .scene-beat {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .scene-card .scene-placeholder {
+      width: 100%;
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+
+    .scene-card .spinner-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 2;
+    }
+
+    /* Video grid */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .video-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .video-card video {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      display: block;
+      background: #000;
+    }
+
+    .video-card .video-info {
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .video-card .video-label {
+      font-size: 0.85rem;
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    .video-card .video-placeholder {
+      width: 100%;
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+
+    /* Final trailer */
+    .trailer-player {
+      text-align: center;
+    }
+
+    .trailer-player video {
+      max-width: 100%;
+      border-radius: 12px;
+      border: 2px solid var(--gold-dim);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--glass-border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Progress bar */
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--crimson-light));
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    /* Hidden sections */
+    .hidden { display: none !important; }
+
+    /* Center actions */
+    .center-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .header h1 { font-size: 2rem; }
+      .idea-input-wrap { flex-direction: column; }
+      .storyboard-grid { grid-template-columns: 1fr; }
+      .video-grid { grid-template-columns: 1fr; }
+      .card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <div class="header">
+      <h1>OJ Movie Maker</h1>
+      <p>Put OJ Simpson in any movie. Generate a poster, storyboard, and trailer.</p>
+    </div>
+
+    <!-- Phase 1: Movie Idea -->
+    <div class="card" id="phase-idea">
+      <h2>What movie do you want to put OJ in?</h2>
+      <div class="idea-input-wrap">
+        <input type="text" class="idea-input" id="movieIdeaInput" placeholder="e.g. Make OJ the lead in Home Alone, buddy cop with a tiger..." />
+        <button class="btn btn-gold" id="submitIdeaBtn" onclick="submitIdea()">Make It</button>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-bar" id="statusBar"></div>
+
+    <!-- Phase 2: Poster -->
+    <div class="card hidden" id="phase-poster">
+      <h2>Movie Poster</h2>
+      <div class="poster-area">
+        <div id="posterLoading"><div class="spinner"></div></div>
+        <img class="poster-img hidden" id="posterImg" />
+        <div class="poster-buttons hidden" id="posterButtons">
+          <button class="btn btn-gold" onclick="approvePoster()">Looks Good!</button>
+          <button class="btn btn-ghost" onclick="retryPoster()">Try Again</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 3: Storyboard -->
+    <div class="card hidden" id="phase-storyboard">
+      <h2>Trailer Storyboard</h2>
+      <div class="progress-track" id="storyboardProgress"><div class="progress-fill" style="width: 0%"></div></div>
+      <div class="storyboard-grid" id="storyboardGrid"></div>
+      <div class="center-actions hidden" id="storyboardActions">
+        <button class="btn btn-gold" onclick="generateVideos()">Generate Trailer Videos</button>
+      </div>
+    </div>
+
+    <!-- Phase 4: Videos -->
+    <div class="card hidden" id="phase-videos">
+      <h2>Trailer Videos</h2>
+      <div class="progress-track" id="videoProgress"><div class="progress-fill" style="width: 0%"></div></div>
+      <div class="video-grid" id="videoGrid"></div>
+      <div class="center-actions hidden" id="videoActions">
+        <button class="btn btn-gold" onclick="assembleTrailer()">Create Trailer</button>
+      </div>
+    </div>
+
+    <!-- Phase 5: Final Trailer -->
+    <div class="card hidden" id="phase-trailer">
+      <h2>Your OJ Movie Trailer</h2>
+      <div class="trailer-player">
+        <video id="trailerVideo" controls></video>
+      </div>
+      <div class="center-actions">
+        <button class="btn btn-ghost" onclick="startOver()">Start Over</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════
+    // App State
+    // ═══════════════════════════════════════════════
+    const state = {
+      movieIdea: "",
+      posterPrompt: "",
+      posterUrl: "",
+      sessionId: "",
+      scenes: [],         // { url, label, beat, scenePrompt }
+      videos: [],          // { url, type, index, imageUrl, prompt }
+      bookendIntro: null,  // { url, prompt }
+      bookendClosing: null,
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function setStatus(msg, active = true) {
+      const bar = $("statusBar");
+      bar.textContent = msg;
+      bar.className = active ? "status-bar active" : "status-bar";
+    }
+
+    function show(id) { $(id).classList.remove("hidden"); }
+    function hide(id) { $(id).classList.add("hidden"); }
+
+    // ═══════════════════════════════════════════════
+    // Phase 1: Submit Movie Idea
+    // ═══════════════════════════════════════════════
+    async function submitIdea() {
+      const idea = $("movieIdeaInput").value.trim();
+      if (!idea) return;
+
+      state.movieIdea = idea;
+      $("submitIdeaBtn").disabled = true;
+      setStatus("Transforming your idea into a movie poster prompt...");
+      show("phase-poster");
+      show("posterLoading");
+      hide("posterButtons");
+      hide("posterImg");
+
+      try {
+        // Step 1: Get poster prompt from Claude
+        const promptResp = await fetch("/api/generate-poster-prompt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ movieIdea: idea }),
+        });
+
+        if (!promptResp.ok) throw new Error((await promptResp.json()).error);
+        const { prompt } = await promptResp.json();
+        state.posterPrompt = prompt;
+
+        setStatus("Generating movie poster...");
+
+        // Step 2: Generate poster image
+        const posterResp = await fetch("/api/generate-poster", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt }),
+        });
+
+        if (!posterResp.ok) throw new Error((await posterResp.json()).error);
+        const posterData = await posterResp.json();
+
+        state.posterUrl = posterData.url;
+        state.sessionId = posterData.sessionId;
+
+        $("posterImg").src = posterData.url;
+        show("posterImg");
+        hide("posterLoading");
+        show("posterButtons");
+        setStatus("Poster generated! Does it look good?");
+      } catch (err) {
+        setStatus(`Error: ${err.message}`, true);
+        hide("posterLoading");
+      }
+
+      $("submitIdeaBtn").disabled = false;
+    }
+
+    // ═══════════════════════════════════════════════
+    // Phase 2: Poster approval / retry
+    // ═══════════════════════════════════════════════
+    async function retryPoster() {
+      hide("posterButtons");
+      hide("posterImg");
+      show("posterLoading");
+      setStatus("Regenerating poster...");
+
+      try {
+        const posterResp = await fetch("/api/generate-poster", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: state.posterPrompt }),
+        });
+
+        if (!posterResp.ok) throw new Error((await posterResp.json()).error);
+        const posterData = await posterResp.json();
+
+        state.posterUrl = posterData.url;
+        state.sessionId = posterData.sessionId;
+
+        $("posterImg").src = posterData.url;
+        show("posterImg");
+        hide("posterLoading");
+        show("posterButtons");
+        setStatus("New poster generated! How about this one?");
+      } catch (err) {
+        setStatus(`Error: ${err.message}`, true);
+        hide("posterLoading");
+        show("posterButtons");
+      }
+    }
+
+    function approvePoster() {
+      hide("posterButtons");
+      setStatus("Poster approved! Generating trailer storyboard...");
+      generateStoryboard();
+    }
+
+    // ═══════════════════════════════════════════════
+    // Phase 3: Storyboard Generation (SSE)
+    // ═══════════════════════════════════════════════
+    function generateStoryboard() {
+      show("phase-storyboard");
+      hide("storyboardActions");
+      state.scenes = new Array(7).fill(null);
+
+      // Build placeholder grid
+      const grid = $("storyboardGrid");
+      grid.innerHTML = "";
+      for (let i = 0; i < 7; i++) {
+        grid.innerHTML += `
+          <div class="scene-card" id="sceneCard${i}">
+            <div class="scene-placeholder" id="scenePlaceholder${i}">Scene ${i + 1}</div>
+            <div class="scene-info">
+              <span class="scene-label" id="sceneLabel${i}">Waiting...</span>
+              <button class="btn btn-ghost btn-sm hidden" id="sceneRegenBtn${i}" onclick="regenScene(${i})">Redo</button>
+            </div>
+          </div>
+        `;
+      }
+
+      // SSE connection
+      const body = JSON.stringify({
+        movieIdea: state.movieIdea,
+        posterPrompt: state.posterPrompt,
+        posterUrl: state.posterUrl,
+        sessionId: state.sessionId,
+      });
+
+      fetch("/api/generate-storyboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      }).then((resp) => {
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        function read() {
+          reader.read().then(({ done, value }) => {
+            if (done) return;
+            buffer += decoder.decode(value, { stream: true });
+
+            const lines = buffer.split("\n");
+            buffer = lines.pop();
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  handleStoryboardEvent(data);
+                } catch {}
+              }
+            }
+
+            read();
+          });
+        }
+        read();
+      });
+    }
+
+    function handleStoryboardEvent(data) {
+      if (data.type === "progress") {
+        setStatus(data.status);
+        if (data.index !== undefined && data.total) {
+          const pct = ((data.index + 1) / data.total) * 100;
+          $("storyboardProgress").querySelector(".progress-fill").style.width = `${pct}%`;
+        }
+      }
+
+      if (data.type === "scenes-planned") {
+        data.scenes.forEach((s, i) => {
+          const label = $(`sceneLabel${i}`);
+          if (label) label.textContent = `${s.label}`;
+        });
+      }
+
+      if (data.type === "frame") {
+        const i = data.index;
+        state.scenes[i] = {
+          url: data.url,
+          label: data.label,
+          beat: data.beat,
+          scenePrompt: data.scenePrompt,
+        };
+
+        const card = $(`sceneCard${i}`);
+        const placeholder = $(`scenePlaceholder${i}`);
+        if (placeholder) {
+          const img = document.createElement("img");
+          img.src = data.url;
+          placeholder.replaceWith(img);
+        }
+
+        const label = $(`sceneLabel${i}`);
+        if (label) label.textContent = data.label;
+
+        show(`sceneRegenBtn${i}`);
+
+        const pct = ((i + 1) / 7) * 100;
+        $("storyboardProgress").querySelector(".progress-fill").style.width = `${pct}%`;
+        setStatus(`Scene ${i + 1}/7 complete: ${data.label}`);
+      }
+
+      if (data.type === "error" && data.index !== undefined) {
+        const label = $(`sceneLabel${data.index}`);
+        if (label) label.textContent = "Failed";
+        setStatus(data.status);
+      }
+
+      if (data.type === "complete") {
+        setStatus("Storyboard complete! Review and regenerate any scenes, then generate videos.");
+        show("storyboardActions");
+        $("storyboardProgress").querySelector(".progress-fill").style.width = "100%";
+      }
+    }
+
+    async function regenScene(index) {
+      const scene = state.scenes[index];
+      if (!scene) return;
+
+      const btn = $(`sceneRegenBtn${index}`);
+      btn.disabled = true;
+      btn.textContent = "...";
+
+      try {
+        const resp = await fetch("/api/regenerate-scene", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            posterUrl: state.posterUrl,
+            scenePrompt: scene.scenePrompt,
+            index,
+            sessionId: state.sessionId,
+          }),
+        });
+
+        if (!resp.ok) throw new Error((await resp.json()).error);
+        const result = await resp.json();
+
+        state.scenes[index].url = result.url;
+        const card = $(`sceneCard${index}`);
+        const img = card.querySelector("img");
+        if (img) img.src = result.url;
+      } catch (err) {
+        setStatus(`Regen failed: ${err.message}`);
+      }
+
+      btn.disabled = false;
+      btn.textContent = "Redo";
+    }
+
+    // ═══════════════════════════════════════════════
+    // Phase 4: Video Generation (SSE)
+    // ═══════════════════════════════════════════════
+    function generateVideos() {
+      show("phase-videos");
+      hide("videoActions");
+      hide("storyboardActions");
+
+      const sceneUrls = state.scenes.filter(Boolean).map((s) => s.url);
+      const sceneLabels = state.scenes.filter(Boolean).map((s) => s.label);
+
+      // We'll dynamically build the video grid as results come in
+      // Expect: 1 intro + N content + 1 closing
+      const totalExpected = sceneUrls.length + 2; // +2 for bookends
+      state.videos = [];
+
+      const grid = $("videoGrid");
+      grid.innerHTML = "";
+
+      // Placeholder: intro
+      grid.innerHTML += buildVideoPlaceholder("bookend-intro", -1, "Studio Intro");
+
+      // Placeholder: content scenes
+      sceneUrls.forEach((_, i) => {
+        grid.innerHTML += buildVideoPlaceholder("content", i, sceneLabels[i] || `Scene ${i + 1}`);
+      });
+
+      // Placeholder: closing
+      grid.innerHTML += buildVideoPlaceholder("bookend-closing", -2, "Coming Soon");
+
+      // SSE
+      fetch("/api/generate-videos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          movieIdea: state.movieIdea,
+          sceneUrls,
+          sceneLabels,
+          sessionId: state.sessionId,
+        }),
+      }).then((resp) => {
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let completedCount = 0;
+
+        function read() {
+          reader.read().then(({ done, value }) => {
+            if (done) return;
+            buffer += decoder.decode(value, { stream: true });
+
+            const lines = buffer.split("\n");
+            buffer = lines.pop();
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  handleVideoEvent(data, totalExpected, () => { completedCount++; });
+                } catch {}
+              }
+            }
+
+            read();
+          });
+        }
+        read();
+      });
+    }
+
+    function buildVideoPlaceholder(type, index, label) {
+      const id = videoCardId(type, index);
+      return `
+        <div class="video-card" id="${id}">
+          <div class="video-placeholder" id="${id}_ph">${label}</div>
+          <div class="video-info">
+            <span class="video-label">${label}</span>
+            <button class="btn btn-ghost btn-sm hidden" id="${id}_regen" onclick="regenVideo('${type}', ${index})">Redo</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function videoCardId(type, index) {
+      if (type === "bookend-intro") return "vid_intro";
+      if (type === "bookend-closing") return "vid_closing";
+      return `vid_scene_${index}`;
+    }
+
+    let videoCompletedCount = 0;
+    let videoTotalExpected = 0;
+
+    function handleVideoEvent(data, totalExpected, onComplete) {
+      videoTotalExpected = totalExpected;
+
+      if (data.type === "status") {
+        setStatus(data.status);
+      }
+
+      if (data.type === "bookends-ready") {
+        state.bookendIntro = data.intro;
+        state.bookendClosing = data.closing;
+      }
+
+      if (data.type === "video-submitted") {
+        const id = videoCardId(data.jobType, data.index);
+        setStatus(data.status);
+      }
+
+      if (data.type === "video-polling") {
+        setStatus(`${data.jobType === "content" ? `Scene ${data.index + 1}` : data.jobType}: ${data.klingStatus}...`);
+      }
+
+      if (data.type === "video-complete") {
+        const id = videoCardId(data.jobType, data.index);
+        const card = document.getElementById(id);
+        if (card) {
+          const ph = document.getElementById(`${id}_ph`);
+          if (ph) {
+            const video = document.createElement("video");
+            video.src = data.url;
+            video.muted = true;
+            video.loop = true;
+            video.playsInline = true;
+            video.addEventListener("mouseenter", () => video.play());
+            video.addEventListener("mouseleave", () => { video.pause(); video.currentTime = 0; });
+            ph.replaceWith(video);
+          }
+          show(`${id}_regen`);
+        }
+
+        // Track in state
+        state.videos.push({
+          url: data.url,
+          type: data.jobType,
+          index: data.index,
+          imageUrl: data.jobType === "bookend-intro" ? state.bookendIntro?.url : data.jobType === "bookend-closing" ? state.bookendClosing?.url : state.scenes[data.index]?.url,
+          prompt: "",
+        });
+
+        videoCompletedCount++;
+        const pct = (videoCompletedCount / videoTotalExpected) * 100;
+        $("videoProgress").querySelector(".progress-fill").style.width = `${pct}%`;
+        setStatus(data.status);
+        onComplete();
+      }
+
+      if (data.type === "video-error") {
+        setStatus(data.status);
+      }
+
+      if (data.type === "all-videos-complete") {
+        setStatus(`${data.completed}/${data.total} videos complete! Review and create your trailer.`);
+        show("videoActions");
+        $("videoProgress").querySelector(".progress-fill").style.width = "100%";
+      }
+    }
+
+    async function regenVideo(type, index) {
+      const id = videoCardId(type, index);
+      const btn = document.getElementById(`${id}_regen`);
+      if (btn) { btn.disabled = true; btn.textContent = "..."; }
+
+      let imageUrl, prompt;
+      if (type === "bookend-intro") {
+        imageUrl = state.bookendIntro?.url;
+        prompt = "Dramatic movie studio logo animation. Slow zoom in with golden light rays expanding, lens flare intensifying.";
+      } else if (type === "bookend-closing") {
+        imageUrl = state.bookendClosing?.url;
+        prompt = "COMING SOON text gently pulsing with dramatic light. Subtle lens flare and film grain.";
+      } else {
+        imageUrl = state.scenes[index]?.url;
+        prompt = `Cinematic scene motion, dramatic camera movement, movie trailer style.`;
+      }
+
+      try {
+        const resp = await fetch("/api/regenerate-video", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl, prompt, index, jobType: type, sessionId: state.sessionId }),
+        });
+
+        if (!resp.ok) throw new Error((await resp.json()).error);
+        const result = await resp.json();
+
+        const card = document.getElementById(id);
+        const video = card?.querySelector("video");
+        if (video) video.src = result.url;
+
+        // Update state
+        const existing = state.videos.find((v) => v.type === type && v.index === index);
+        if (existing) existing.url = result.url;
+      } catch (err) {
+        setStatus(`Regen failed: ${err.message}`);
+      }
+
+      if (btn) { btn.disabled = false; btn.textContent = "Redo"; }
+    }
+
+    // ═══════════════════════════════════════════════
+    // Phase 5: Assemble Trailer
+    // ═══════════════════════════════════════════════
+    async function assembleTrailer() {
+      hide("videoActions");
+      setStatus("Assembling your trailer...");
+
+      // Build ordered video URLs: intro, scenes in order, closing
+      const orderedUrls = [];
+
+      const intro = state.videos.find((v) => v.type === "bookend-intro");
+      if (intro) orderedUrls.push(intro.url);
+
+      const contentVideos = state.videos
+        .filter((v) => v.type === "content")
+        .sort((a, b) => a.index - b.index);
+      contentVideos.forEach((v) => orderedUrls.push(v.url));
+
+      const closing = state.videos.find((v) => v.type === "bookend-closing");
+      if (closing) orderedUrls.push(closing.url);
+
+      if (orderedUrls.length === 0) {
+        setStatus("No videos to assemble!");
+        show("videoActions");
+        return;
+      }
+
+      try {
+        const resp = await fetch("/api/assemble-trailer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ videoUrls: orderedUrls, sessionId: state.sessionId }),
+        });
+
+        if (!resp.ok) throw new Error((await resp.json()).error);
+        const result = await resp.json();
+
+        show("phase-trailer");
+        $("trailerVideo").src = result.url;
+        setStatus("Your OJ Movie Trailer is ready!");
+      } catch (err) {
+        setStatus(`Assembly failed: ${err.message}`);
+        show("videoActions");
+      }
+    }
+
+    function startOver() {
+      // Reset everything
+      state.movieIdea = "";
+      state.posterPrompt = "";
+      state.posterUrl = "";
+      state.sessionId = "";
+      state.scenes = [];
+      state.videos = [];
+      state.bookendIntro = null;
+      state.bookendClosing = null;
+      videoCompletedCount = 0;
+
+      $("movieIdeaInput").value = "";
+      hide("phase-poster");
+      hide("phase-storyboard");
+      hide("phase-videos");
+      hide("phase-trailer");
+      setStatus("");
+
+      $("storyboardGrid").innerHTML = "";
+      $("videoGrid").innerHTML = "";
+    }
+
+    // Enter key submits
+    $("movieIdeaInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") submitIdea();
+    });
+  </script>
+</body>
+</html>
