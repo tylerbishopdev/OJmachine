@@ -5,6 +5,10 @@ import { fal } from "@fal-ai/client";
 
 fal.config({ proxyUrl: "/api/fal/proxy" });
 
+function falOutput(result) {
+  return result.data ?? result;
+}
+
 export default function Home() {
   const [movieIdea, setMovieIdea] = useState("");
   const [status, setStatus] = useState("");
@@ -59,7 +63,7 @@ export default function Home() {
 
       updateStatus("Generating movie poster...");
 
-      const result = await fal.subscribe("fal-ai/nano-banana-pro", {
+      const raw = await fal.subscribe("fal-ai/nano-banana-pro", {
         input: {
           prompt,
           seed: Math.floor(Math.random() * 100000),
@@ -70,6 +74,7 @@ export default function Home() {
           safety_tolerance: 5,
         },
       });
+      const result = falOutput(raw);
 
       if (result.images?.[0]?.url) {
         setPosterUrl(result.images[0].url);
@@ -95,7 +100,7 @@ export default function Home() {
     updateStatus("Regenerating poster...");
 
     try {
-      const result = await fal.subscribe("fal-ai/nano-banana-pro", {
+      const raw = await fal.subscribe("fal-ai/nano-banana-pro", {
         input: {
           prompt: posterPrompt,
           seed: Math.floor(Math.random() * 100000),
@@ -106,6 +111,7 @@ export default function Home() {
           safety_tolerance: 5,
         },
       });
+      const result = falOutput(raw);
 
       if (result.images?.[0]?.url) {
         setPosterUrl(result.images[0].url);
@@ -171,7 +177,7 @@ export default function Home() {
         updateStatus(`Generating scene ${i + 1}/7: ${scene.label}`);
 
         try {
-          const result = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
+          const raw = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
             input: {
               prompt: scene.scene,
               image_urls: [posterUrl],
@@ -184,6 +190,7 @@ export default function Home() {
               limit_generations: true,
             },
           });
+          const result = falOutput(raw);
 
           if (result.images?.[0]?.url) {
             setScenes((prev) =>
@@ -230,7 +237,7 @@ export default function Home() {
     );
 
     try {
-      const result = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
+      const raw = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
         input: {
           prompt: scene.scenePrompt,
           image_urls: [posterUrl],
@@ -243,6 +250,7 @@ export default function Home() {
           limit_generations: true,
         },
       });
+      const result = falOutput(raw);
 
       if (result.images?.[0]?.url) {
         setScenes((prev) =>
@@ -285,7 +293,7 @@ export default function Home() {
 
       updateStatus("Generating studio intro and closing cards...");
 
-      const [introResult, closingResult] = await Promise.all([
+      const [introRaw, closingRaw] = await Promise.all([
         fal.subscribe("fal-ai/nano-banana-pro", {
           input: {
             prompt:
@@ -312,8 +320,8 @@ export default function Home() {
         }),
       ]);
 
-      const introImageUrl = introResult.images?.[0]?.url;
-      const closingImageUrl = closingResult.images?.[0]?.url;
+      const introImageUrl = falOutput(introRaw).images?.[0]?.url;
+      const closingImageUrl = falOutput(closingRaw).images?.[0]?.url;
 
       const allJobs = [];
 
@@ -371,7 +379,7 @@ export default function Home() {
 
       const videoPromises = allJobs.map(async (job, jobIdx) => {
         try {
-          const result = await fal.subscribe(
+          const raw = await fal.subscribe(
             "fal-ai/kling-video/v3/pro/image-to-video",
             {
               input: {
@@ -393,6 +401,7 @@ export default function Home() {
               },
             },
           );
+          const result = falOutput(raw);
 
           if (result.video?.url) {
             completedCount++;
@@ -442,7 +451,7 @@ export default function Home() {
     );
 
     try {
-      const result = await fal.subscribe(
+      const raw = await fal.subscribe(
         "fal-ai/kling-video/v3/pro/image-to-video",
         {
           input: {
@@ -457,6 +466,7 @@ export default function Home() {
           pollInterval: 5000,
         },
       );
+      const result = falOutput(raw);
 
       if (result.video?.url) {
         setVideoSlots((prev) =>
