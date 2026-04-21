@@ -10,7 +10,7 @@
   "dependencies": {
     "@fal-ai/client": "latest",
     "@fal-ai/server-proxy": "latest",
-    "next": "latest",
+    "next": "16.1.7",
     "react": "latest",
     "react-dom": "latest"
   }
